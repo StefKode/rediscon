@@ -12,7 +12,7 @@ import time
 
 
 class RedisCon():
-    version = "1.3"
+    version = "1.4"
 
     def __init__(self, name="not-set", host=None, port=6379, db=0, log_enabled=False, trx_log=False):
         self.name = name
@@ -96,7 +96,19 @@ class RedisCon():
                     if self.connected:
                         self.log("ok, re-connected")
                         break
-    
+
+    def match(self, pattern):
+        while True:
+            try:
+                return self.redis.scan_iter(pattern)
+            except Exception as e:
+                self.log("match: con abort, wait...")
+                self.connected = False
+                while self.run:
+                    time.sleep(1)
+                    if self.connected:
+                        self.log("ok, re-connected")
+                        break
 
     def subscribedChanges(self):
         while not self.connected:
